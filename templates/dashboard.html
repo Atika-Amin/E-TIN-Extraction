@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Records · Taxpayer Registry{% endblock %}
+{% block content %}
+
+<div class="page-head">
+  <h1>Records</h1>
+  <a href="{{ url_for('upload') }}" class="btn btn-primary">Upload certificate</a>
+</div>
+
+<form class="search-bar" method="get" action="{{ url_for('dashboard') }}">
+  <input type="text" name="q" value="{{ search }}" placeholder="Search by name or TIN">
+  <button type="submit" class="btn">Search</button>
+  {% if search %}<a href="{{ url_for('dashboard') }}" class="btn-text">Clear</a>{% endif %}
+</form>
+
+{% if db_error %}
+<div class="notice notice-error">
+  <p>Couldn't reach the database.</p>
+  <p class="notice-detail">{{ db_error }}</p>
+</div>
+{% elif taxpayers|length == 0 %}
+<div class="empty-state">
+  {% if search %}
+  <p>No records match "{{ search }}".</p>
+  <a href="{{ url_for('dashboard') }}" class="btn-text">Clear search</a>
+  {% else %}
+  <p>No taxpayer records yet.</p>
+  <a href="{{ url_for('upload') }}" class="btn btn-primary">Upload your first certificate</a>
+  {% endif %}
+</div>
+{% else %}
+<table class="registry-table">
+  <thead>
+    <tr>
+      <th class="col-photo"></th>
+      <th>Name</th>
+      <th>TIN</th>
+      <th>Mobile</th>
+      <th>Email</th>
+      <th>Added</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for t in taxpayers %}
+    <tr data-href="{{ url_for('taxpayer_detail', taxpayer_id=t.id) }}" onclick="window.location=this.dataset.href">
+      <td class="col-photo">
+        {% if t.photo_path %}
+        <img src="{{ url_for('photo', filename=t.photo_path.split('/')[-1].split('\\')[-1]) }}" alt="">
+        {% else %}
+        <span class="photo-placeholder"></span>
+        {% endif %}
+      </td>
+      <td>{{ t.taxpayer_name or "—" }}</td>
+      <td class="mono">{{ t.tin or "—" }}</td>
+      <td>{{ t.mobile_number or "—" }}</td>
+      <td>{{ t.email or "—" }}</td>
+      <td class="muted">{{ t.extracted_at.strftime("%d %b %Y") if t.extracted_at else "—" }}</td>
+      <td onclick="event.stopPropagation()">
+        <form method="post" action="{{ url_for('remove_taxpayer', taxpayer_id=t.id) }}"
+              data-msg="Delete {{ t.taxpayer_name or 'this record' }} permanently?"
+              onsubmit="return confirm(this.dataset.msg)"
+              style="margin:0">
+          <button type="submit" style="background:#c0392b;color:#fff;border:0;padding:4px 10px;border-radius:4px;cursor:pointer">Delete</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+
+{% endblock %}

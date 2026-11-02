@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Upload · Taxpayer Registry{% endblock %}
+{% block content %}
+
+<div class="page-head">
+  <h1>Upload certificates</h1>
+</div>
+
+{% if error %}
+<div class="notice notice-error"><p>{{ error }}</p></div>
+{% endif %}
+
+{% if results is none %}
+<form method="post" enctype="multipart/form-data" id="upload-form">
+  <label class="dropzone" id="dropzone" for="file-input">
+    <span class="dropzone-title">Drop e-TIN certificates here</span>
+    <span class="dropzone-sub">or click to choose files - PDF only</span>
+    <span class="dropzone-files" id="file-list"></span>
+  </label>
+  <input type="file" name="pdfs" id="file-input" accept="application/pdf" multiple hidden>
+  <button type="submit" class="btn btn-primary" id="submit-btn" disabled>Extract and save</button>
+</form>
+
+<div class="processing-overlay" id="processing-overlay" hidden>
+  <div class="spinner"></div>
+  <p id="processing-text">Extracting and saving - this can take up to a minute per file...</p>
+</div>
+
+<script>
+  const input = document.getElementById('file-input');
+  const dropzone = document.getElementById('dropzone');
+  const fileList = document.getElementById('file-list');
+  const submitBtn = document.getElementById('submit-btn');
+  const form = document.getElementById('upload-form');
+  const overlay = document.getElementById('processing-overlay');
+  const processingText = document.getElementById('processing-text');
+
+  function updateFileList() {
+    const files = Array.from(input.files);
+    fileList.textContent = files.length ? files.map(f => f.name).join(', ') : '';
+    submitBtn.disabled = files.length === 0;
+  }
+
+  input.addEventListener('change', updateFileList);
+
+  ['dragover', 'dragleave', 'drop'].forEach(evt => {
+    dropzone.addEventListener(evt, e => e.preventDefault());
+  });
+  dropzone.addEventListener('dragover', () => dropzone.classList.add('dropzone-active'));
+  dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dropzone-active'));
+  dropzone.addEventListener('drop', e => {
+    dropzone.classList.remove('dropzone-active');
+    input.files = e.dataTransfer.files;
+    updateFileList();
+  });
+
+  form.addEventListener('submit', () => {
+    const count = input.files.length;
+    processingText.textContent = count > 1
+      ? `Extracting and saving ${count} files - this can take a while, please don't close this tab...`
+      : "Extracting and saving - this can take up to a minute...";
+    form.hidden = true;
+    overlay.hidden = false;
+  });
+</script>
+
+{% else %}
+<div class="upload-results">
+  {% for r in results %}
+  <div class="result-row {{ 'result-ok' if r.ok else 'result-fail' }}">
+    <span class="result-filename">{{ r.filename }}</span>
+    {% if r.ok %}
+    <span class="result-status">Saved. <a href="{{ url_for('taxpayer_detail', taxpayer_id=r.taxpayer_id) }}">View record</a></span>
+    {% else %}
+    <span class="result-status">{{ r.message }}</span>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+<a href="{{ url_for('upload') }}" class="btn btn-primary">Upload more</a>
+{% endif %}
+
+{% endblock %}

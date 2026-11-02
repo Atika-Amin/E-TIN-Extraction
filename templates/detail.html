@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}{{ t.taxpayer_name or "Record" }} · Taxpayer Registry{% endblock %}
+{% block content %}
+
+<a href="{{ url_for('dashboard') }}" class="back-link">Back to records</a>
+
+<div class="dossier">
+  <div class="dossier-photo-frame">
+    {% if t.photo_path %}
+    <img src="{{ url_for('photo', filename=t.photo_path.split('/')[-1].split('\\')[-1]) }}" alt="Photo of {{ t.taxpayer_name }}">
+    {% else %}
+    <div class="photo-placeholder-large"></div>
+    {% endif %}
+  </div>
+
+  <div class="dossier-heading">
+    <h1>{{ t.taxpayer_name or "Unnamed record" }}</h1>
+    <p class="dossier-sub">TIN {{ t.tin or "—" }} (issued {{ t.issue_date or "—" }})</p>
+  </div>
+</div>
+
+<section class="field-group">
+  <h2>Personal</h2>
+  <dl>
+    <div><dt>Date of birth</dt><dd>{{ t.dob or "—" }}</dd></div>
+    <div><dt>Gender</dt><dd>{{ t.gender or "—" }}</dd></div>
+    <div><dt>Father's name</dt><dd>{{ t.father_name or "—" }}</dd></div>
+    <div><dt>Mother's name</dt><dd>{{ t.mother_name or "—" }}</dd></div>
+    <div><dt>Spouse's name</dt><dd>{{ t.spouse_name or "—" }}</dd></div>
+  </dl>
+</section>
+
+<section class="field-group">
+  <h2>Tax registration</h2>
+  <dl>
+    <div><dt>Purpose of TIN</dt><dd>{{ t.purpose_of_tin or "—" }}</dd></div>
+    <div><dt>Taxes zone</dt><dd>{{ t.taxes_zone or "—" }}</dd></div>
+    <div><dt>Taxes circle</dt><dd>{{ t.taxes_circle or "—" }}</dd></div>
+    <div><dt>Status</dt><dd>{{ t.status or "—" }}</dd></div>
+    <div><dt>Nationality</dt><dd>{{ t.nationality or "—" }}</dd></div>
+    {% if t.old_tin %}<div><dt>Old TIN</dt><dd class="mono">{{ t.old_tin }}</dd></div>{% endif %}
+  </dl>
+</section>
+
+<section class="field-group">
+  <h2>Identification</h2>
+  <dl>
+    <div><dt>NID</dt><dd class="mono">{{ t.nid or "—" }}</dd></div>
+    <div><dt>Smart Card ID</dt><dd class="mono">{{ t.smart_card_id or "—" }}</dd></div>
+  </dl>
+</section>
+
+<section class="field-group">
+  <h2>Contact</h2>
+  <dl>
+    <div><dt>Mobile</dt><dd>{{ t.mobile_number or "—" }}</dd></div>
+    <div><dt>Email</dt><dd>{{ t.email or "—" }}</dd></div>
+    <div><dt>Facsimile</dt><dd>{{ t.facsimile or "—" }}</dd></div>
+  </dl>
+</section>
+
+<section class="field-group">
+  <h2>Addresses</h2>
+  {% if t.addresses|length == 0 %}
+  <p class="muted">No address records found for this taxpayer.</p>
+  {% else %}
+  <div class="address-list">
+    {% for addr in t.addresses %}
+    <div class="address-card">
+      <h3>{{ addr.address_type|capitalize }}</h3>
+      <p>{{ addr.address_line or "—" }}</p>
+      <p class="muted">
+        {{ addr.thana or "—" }}, {{ addr.district_state or "—" }}{% if addr.post_zip_code %} {{ addr.post_zip_code }}{% endif %}
+        <br>{{ addr.country or "—" }}
+      </p>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</section>
+
+<section class="field-group">
+  <h2>Account</h2>
+  <dl>
+    <div><dt>Login username</dt><dd>{{ t.login_username or "—" }}</dd></div>
+    <div><dt>User type</dt><dd>{{ t.user_type or "—" }}</dd></div>
+  </dl>
+</section>
+
+{% endblock %}
